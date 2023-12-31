@@ -1,4 +1,10 @@
-#include <WiFiNINA.h>
+
+/*
+ * Arduino code for Generator Remote for Element14
+ * By: Kaleb Clark (kaleb@abraxxus.net)
+ * Playlist: Social Distortion, NoFX, Red Hot Chili Peppers, No Doubt, Megadeth
+ *           Descendents
+ */#include <WiFiNINA.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <Wire.h> 
@@ -19,8 +25,6 @@ WiFiClient wifiClient;
 // MQTT Config
 const char* cerbogx = "172.16.10.20";
 PubSubClient mqtt(wifiClient);
-
-
 
 // Globals
 bool remote = true;
@@ -97,10 +101,6 @@ void setup() {
   // Button Setup
   btn_start.attachLongPressStop(handleBtnStart, &btn_start);
   btn_stop.attachLongPressStop(handleBtnStop, &btn_stop);
-  //btn_enable.attachLongPressStop(btnEnableStop, &btn_enable);
-  //btn_start.attachLongPressStop(btnStartStop, &btn_start);
-
-  //btn_start.attachLongPressStop(handleStart);
 
   // Relay Pins
   pinMode(gen_enable_pin, OUTPUT);
@@ -124,10 +124,13 @@ void setup() {
 /* LOOP
  * ========================================================================= */
 void loop() {
+  // MQTT
   if (!mqtt.connected()) {
     reconnect();
   }
   mqtt.loop();
+
+  // Buttons
   btn_start.tick();
   btn_stop.tick();
 
@@ -159,8 +162,6 @@ void loop() {
     }
     digitalWrite(led_soc, soc_state);
   }
-  
-
 }
 
 void handleBtnStart(void *oneButton) {
@@ -172,44 +173,19 @@ void handleBtnStart(void *oneButton) {
     mqttPublish("N/c0619ab48d75/bsr/generator/start", true);
     timer = millis();
   }
-  //Serial.println("Start Button Pushed");
-  //mqttPublish("N/c0619ab48d75/bsr/generator/enable", true);
-  //runStart();
-  // delay(enable_start_offset);
-  // mqttPublish("N/c0619ab48d75/bsr/generator/start", true);
-  // timer = millis();
 }
 
-void runStart() {
-  delay(enable_start_offset);
-  mqttPublish("N/c0619ab48d75/bsr/generator/start", true);
-  timer = millis();
-}
+// void runStart() {
+//   delay(enable_start_offset);
+//   mqttPublish("N/c0619ab48d75/bsr/generator/start", true);
+//   timer = millis();
+// }
 
 void handleBtnStop(void *oneButton) {
   Serial.println("Stop Button Pushed");
   mqttPublish("N/c0619ab48d75/bsr/generator/enable", false);
   mqttPublish("N/c0619ab48d75/bsr/generator/start", false);
 }
-
-// void btnEnableStop(void *oneButton) {
-//   //Serial.print(((OneButton *)oneButton)->getPressedMs());
-//   Serial.println("Enable Pushed");
-//   //mqtt.publish("N/c0619ab48d75/bsr/generator/enable", ON);
-//   mqttPublish("N/c0619ab48d75/bsr/generator/enable", !gen_enable);
-// }
-
-// void btnStartStop(void *oneButton) {
-//   Serial.println("Start Pushed");
-//   mqttPublish("N/c0619ab48d75/bsr/generator/start", !gen_start);
-// }
-
-
-//void btnEnableDuringPress(void *oneButton) {
-//  Serial.print(((OneButton *)oneButton)->getPressedMs());
-//  Serial.println("\t - DuringLongPress()");
-//  return;
-//}
 
 void mqttPublish(char* topic, bool val) {
   Serial.print("Publishing Data: "); Serial.print(topic); Serial.print(": "); Serial.println(val);
@@ -291,14 +267,6 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       digitalWrite(led_start, LOW);
       digitalWrite(gen_start_pin, LOW);
     }
-    // if(!gen_start) {
-    //   Serial.println("Disable Generator START");
-    //   digitalWrite(8, LOW);
-    // } else if (gen_start) {
-    //   Serial.println("Enable Generator START");
-    //   digitalWrite(8, HIGH);
-    //   TimerLib.setInterval_s(endStartRelay, 5);
-    // }
   }
 
   // Generator Running Change
